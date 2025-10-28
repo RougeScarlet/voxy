@@ -3,11 +3,13 @@ name: auto-release
 on:
   push:
     branches:
-      - main  # or your default branch
+      - main  # adjust as needed
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required for creating releases
 
     steps:
       - name: Checkout sources
@@ -28,13 +30,14 @@ jobs:
       - name: Gradle build
         run: ./gradlew build
 
-      - name: Get latest release tag
-        id: get_tag
+      - name: Determine next tag
+        id: next_tag
         run: |
-          latest_tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "")
+          latest_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest \
+            | jq -r '.tag_name' || echo "")
           echo "Latest tag: $latest_tag"
 
-          if [[ -z "$latest_tag" ]]; then
+          if [[ "$latest_tag" == "null" || -z "$latest_tag" ]]; then
             next_tag="v1.0"
           else
             minor=$(echo "$latest_tag" | grep -oP '(?<=v1\.)[0-9]+' || echo "0")
@@ -43,8 +46,6 @@ jobs:
 
           echo "Next tag: $next_tag"
           echo "next_tag=$next_tag" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create release
         uses: softprops/action-gh-release@v2
