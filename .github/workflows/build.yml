@@ -28,19 +28,20 @@ jobs:
       - name: Get latest release tag
         id: get_tag
         run: |
-          latest_tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "v1.0")
+          latest_tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "")
           echo "Latest tag: $latest_tag"
-          base=${latest_tag%.*}
-          minor=${latest_tag##*.}
-          if [[ "$latest_tag" == "v1.0" && "$minor" == "0" ]]; then
+
+          if [[ -z "$latest_tag" ]]; then
             next_tag="v1.0"
           else
-            next_tag="${base}.$((minor+1))"
+            minor=$(echo "$latest_tag" | grep -oP '(?<=v1\.)[0-9]+' || echo "0")
+            next_tag="v1.$((minor+1))"
           fi
+
+          echo "Next tag: $next_tag"
           echo "next_tag=$next_tag" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
