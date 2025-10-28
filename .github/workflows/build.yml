@@ -1,6 +1,9 @@
-name: build
+name: auto-release
 
-on: [workflow_dispatch]
+on:
+  push:
+    branches:
+      - main  # or your default branch
 
 jobs:
   build:
@@ -42,6 +45,7 @@ jobs:
           echo "next_tag=$next_tag" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
