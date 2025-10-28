@@ -3,7 +3,7 @@ name: auto-release
 on:
   push:
     branches:
-      - main  # adjust as needed
+      - dev  # adjust as needed
 
 jobs:
   build:
